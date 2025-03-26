@@ -76,7 +76,7 @@ async def transcribe_video(video: UploadFile = File(...)):
 async def query_chatgpt(transcription: str = Form(...), query: str = Form(...)):
     """Endpoint to send transcription and user query to ChatGPT."""
     # Prepare the prompt with transcription as context
-    prompt = f"Based on the following transcription: {transcription}\n\nUser query: {query}"
+    prompt = f"Based on the following video: {transcription}\n\nUser query: {query}\n\nFeel free to provide as detailed of a description as you need."
     response = openai_client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
