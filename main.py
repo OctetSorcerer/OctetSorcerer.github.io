@@ -20,7 +20,8 @@ app.add_middleware(
 
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-@app.get("/")
+@app.get("/", response_model=dict)
+@app.head("/")  # Support HEAD requests for health checks
 async def root():
     return {"message": "Backend is running"}
 
@@ -46,20 +47,20 @@ def transcribe_audio_chunks(audio_file, chunk_length_ms=60000):
             except sr.UnknownValueError:
                 full_transcription += "[Unrecognized speech] "
             except sr.RequestError as e:
-                full_transcription += f"[Error: nitric acid{e}] "
+                full_transcription += f"[Error: {e}] "
         os.remove(chunk_filename)
     return full_transcription.strip()
 
 @app.post("/evaluate")
-async def transcribe_video(video: UploadFile = File(...)):
+async def evaluate_video(video: UploadFile = File(...)):
     temp_video_path = "temp_video.mp4"
     audio_file = "temp_audio.wav"
     try:
         with open(temp_video_path, "wb") as buffer:
             shutil.copyfileobj(video.file, buffer)
         extract_audio_from_video(temp_video_path, audio_file)
-        transcription = transcribe_audio_chunks(audio_file)
-        return JSONResponse(content={"transcription": transcription})
+        evaluation = transcribe_audio_chunks(audio_file)
+        return JSONResponse(content={"evaluation": evaluation})
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
     finally:
@@ -71,7 +72,7 @@ async def transcribe_video(video: UploadFile = File(...)):
 @app.post("/query")
 async def query_chatgpt(transcription: str = Form(...), query: str = Form(...)):
     try:
-        prompt = f"Based on the following transcription: {transcription}\n\nUser query: {query}"
+        prompt = f"Based on the following evaluation: {transcription}\n\nUser query: {query}"
         response = openai_client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
