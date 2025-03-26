@@ -50,7 +50,7 @@ def transcribe_audio_chunks(audio_file, chunk_length_ms=60000):
         os.remove(chunk_filename)
     return full_transcription.strip()
 
-@app.post("/transcribe")
+@app.post("/evaluate")
 async def transcribe_video(video: UploadFile = File(...)):
     temp_video_path = "temp_video.mp4"
     audio_file = "temp_audio.wav"
