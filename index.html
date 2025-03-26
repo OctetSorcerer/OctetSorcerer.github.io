@@ -1,25 +1,101 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Transcription and Chat</title>
     <style>
         body {
             background-color: black;
             color: white;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #00ffcc;
+        }
+        button {
+            background-color: #00ffcc;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #00cc99;
+        }
+        input[type="file"], input[type="text"] {
+            margin: 10px 0;
+        }
+        #transcriptionText, #chatResponse {
+            background-color: #1a1a1a;
+            padding: 10px;
+            border-radius: 5px;
         }
     </style>
-    <title>Simple Typing Website</title>
 </head>
 <body>
-    <p id="display"></p>
-    <label for="inputField">Type here:</label>
-    <input type="text" id="inputField">
+    <h1>Upload Video for Transcription</h1>
+    <form id="uploadForm">
+        <input type="file" id="videoUpload" accept=".mp4" required>
+        <button type="submit">Upload and Transcribe</button>
+    </form>
+    <div id="transcriptionSection" style="display:none;">
+        <h2>Transcription</h2>
+        <p id="transcriptionText"></p>
+    </div>
+    <div id="chatSection" style="display:none;">
+        <h2>Ask Questions</h2>
+        <input type="text" id="queryInput" placeholder="Type your query here" style="width: 300px;">
+        <button id="sendQuery">Send</button>
+        <div id="chatResponse"></div>
+    </div>
+
     <script>
-        const display = document.getElementById('display');
-        const inputField = document.getElementById('inputField');
-        inputField.addEventListener('input', function() {
-            display.textContent = inputField.value;
+        const backendURL = "https://your-backend.onrender.com"; // Replace with your backend URL
+
+        document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append("video", document.getElementById("videoUpload").files[0]);
+
+            try {
+                const response = await fetch(`${backendURL}/transcribe`, {
+                    method: "POST",
+                    body: formData
+                });
+                if (!response.ok) throw new Error("Transcription failed");
+                const data = await response.json();
+                document.getElementById("transcriptionText").textContent = data.transcription;
+                document.getElementById("transcriptionSection").style.display = "block";
+                document.getElementById("chatSection").style.display = "block";
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        });
+
+        document.getElementById("sendQuery").addEventListener("click", async () => {
+            const transcription = document.getElementById("transcriptionText").textContent;
+            const query = document.getElementById("queryInput").value;
+            if (!query) {
+                alert("Please enter a query");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${backendURL}/query`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: `transcription=${encodeURIComponent(transcription)}&query=${encodeURIComponent(query)}`
+                });
+                if (!response.ok) throw new Error("Query failed");
+                const data = await response.json();
+                document.getElementById("chatResponse").textContent = data.answer;
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
         });
     </script>
 </body>
