@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background-color: black;
+            color: white;
+        }
+    </style>
+    <title>Simple Typing Website</title>
+</head>
+<body>
+    <p id="display"></p>
+    <label for="inputField">Type here:</label>
+    <input type="text" id="inputField">
+    <script>
+        const display = document.getElementById('display');
+        const inputField = document.getElementById('inputField');
+        inputField.addEventListener('input', function() {
+            display.textContent = inputField.value;
+        });
+    </script>
+</body>
+</html>
