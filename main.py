@@ -78,7 +78,7 @@ async def query_chatgpt(transcription: str = Form(...), query: str = Form(...)):
     # Prepare the prompt with transcription as context
     prompt = f"Based on the following video: {transcription}\n\nUser query: {query}\n\nFeel free to provide as detailed of a description as you need."
     response = openai_client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=500  # Adjust as needed
     )
