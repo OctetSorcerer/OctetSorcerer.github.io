@@ -1,167 +1,81 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Evaluation and Chat</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <title>Video Transcription and Chat</title>
     <style>
         body {
-            background-color: #1a1a1a;
-            color: #f0f0f0;
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        .main-container {
-            max-width: 800px;
-            margin: 40px auto;
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
             padding: 20px;
         }
         h1, h2 {
-            color: #3498db;
-        }
-        form {
-            margin-bottom: 20px;
-        }
-        input[type="file"] {
-            margin-right: 10px;
+            color: #00ffcc;
         }
         button {
-            background-color: #3498db;
-            color: #fff;
-            padding: 10px 20px;
+            background-color: #00ffcc;
             border: none;
+            padding: 10px;
             cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.3s;
         }
         button:hover {
-            background-color: #2980b9;
+            background-color: #00cc99;
         }
-        #evaluationSection, #chatSection {
-            background-color: #2a2a2a;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            display: none;
+        input[type="file"], input[type="text"] {
+            margin: 10px 0;
         }
-        #uploadStatus {
-            margin-top: 10px;
-            font-weight: bold;
-        }
-        .success {
-            color: #2ecc71;
-        }
-        .error {
-            color: #e74c3c;
-        }
-        #queryInput {
-            width: 70%;
-            padding: 10px;
-            margin-right: 10px;
-            background-color: #3a3a3a;
-            border: 1px solid #3498db;
-            color: #f0f0f0;
-            border-radius: 5px;
-        }
-        #chatResponse {
-            margin-top: 10px;
-            background-color: #3a3a3a;
+        #transcriptionText, #chatResponse {
+            background-color: #1a1a1a;
             padding: 10px;
             border-radius: 5px;
-        }
-        .loading-icon {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #3498db;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="main-container">
-        <h1>Upload Video for Evaluation</h1>
-        <form id="uploadForm">
-            <input type="file" id="videoUpload" accept=".mp4" required>
-            <button type="submit">Upload and Evaluate</button>
-        </form>
-        <div id="uploadStatus"></div>
-        <div id="evaluationSection">
-            <h2>Processing</h2>
-            <p id="evaluationText"></p>
-        </div>
-        <div id="chatSection">
-            <h2>Ask Questions</h2>
-            <input type="text" id="queryInput" placeholder="Type your query here">
-            <button id="sendQuery">Send</button>
-            <div id="chatResponse"></div>
-        </div>
+    <h1>Upload Video for Transcription</h1>
+    <form id="uploadForm">
+        <input type="file" id="videoUpload" accept=".mp4" required>
+        <button type="submit">Upload and Transcribe</button>
+    </form>
+    <div id="transcriptionSection" style="display:none;">
+        <h2>Transcription</h2>
+        <p id="transcriptionText"></p>
     </div>
+    <div id="chatSection" style="display:none;">
+        <h2>Ask Questions</h2>
+        <input type="text" id="queryInput" placeholder="Type your query here" style="width: 300px;">
+        <button id="sendQuery">Send</button>
+        <div id="chatResponse"></div>
+    </div>
+
     <script>
-        const backendURL = "https://octetsorcerer-github-io.onrender.com"; 
-        let evaluationResult = null; // Store evaluation result here
+        const backendURL = "https://octetsorcerer-github-io.onrender.com";
 
         document.getElementById("uploadForm").addEventListener("submit", async (e) => {
             e.preventDefault();
             const formData = new FormData();
             formData.append("video", document.getElementById("videoUpload").files[0]);
 
-            const statusDiv = document.getElementById("uploadStatus");
-            statusDiv.textContent = "Uploading...";
-            statusDiv.className = "";
-
-            const evaluationText = document.getElementById("evaluationText");
-            evaluationText.innerHTML = '<span class="loading-icon"></span> Evaluating video...';
-            document.getElementById("evaluationSection").style.display = "block";
-
-            const loadingMessages = [
-                "Evaluating video...",
-                "Analyzing content...",
-                "Processing data...",
-                "Almost done..."
-            ];
-            let messageIndex = 0;
-            const loadingInterval = setInterval(() => {
-                messageIndex = (messageIndex + 1) % loadingMessages.length;
-                evaluationText.innerHTML = '<span class="loading-icon"></span>' + loadingMessages[messageIndex];
-            }, 3000);
-
             try {
-                const response = await fetch(`${backendURL}/evaluate`, {
+                const response = await fetch(`${backendURL}/transcribe`, {
                     method: "POST",
                     body: formData
                 });
-                if (!response.ok) throw new Error("Evaluation failed");
+                if (!response.ok) throw new Error("Transcription failed");
                 const data = await response.json();
-                clearInterval(loadingInterval);
-                evaluationResult = data.evaluation; // Store evaluation result
-                evaluationText.textContent = "Done evaluating the video";
+                document.getElementById("transcriptionText").textContent = data.transcription;
+                document.getElementById("transcriptionSection").style.display = "block";
                 document.getElementById("chatSection").style.display = "block";
-                statusDiv.textContent = "Upload successful!";
-                statusDiv.className = "success";
-                document.getElementById("uploadForm").reset();
             } catch (error) {
-                clearInterval(loadingInterval);
-                evaluationText.textContent = "";
-                statusDiv.textContent = "Upload failed!";
-                statusDiv.className = "error";
                 alert("Error: " + error.message);
             }
         });
 
         document.getElementById("sendQuery").addEventListener("click", async () => {
-            if (!evaluationResult) {
-                alert("Please upload a video first");
-                return;
-            }
+            const transcription = document.getElementById("transcriptionText").textContent;
             const query = document.getElementById("queryInput").value;
             if (!query) {
                 alert("Please enter a query");
@@ -174,7 +88,7 @@
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded"
                     },
-                    body: `evaluation=${encodeURIComponent(evaluationResult)}&query=${encodeURIComponent(query)}`
+                    body: `transcription=${encodeURIComponent(transcription)}&query=${encodeURIComponent(query)}`
                 });
                 if (!response.ok) throw new Error("Query failed");
                 const data = await response.json();
